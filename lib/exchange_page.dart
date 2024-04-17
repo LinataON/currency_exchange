@@ -1,60 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:currency_exchange/exchange_service.dart';
 
-class ExchangePage extends StatefulWidget {
+
+
+class CurrencyConverter extends StatefulWidget {
+  final ApiService apiService;
+
+  CurrencyConverter({required this.apiService});
+
   @override
-  _ExchangePageState createState() => _ExchangePageState();
+  _CurrencyConverterState createState() => _CurrencyConverterState();
 }
 
-class _ExchangePageState extends State<ExchangePage> {
-  double _exchangeRate = 0.0;
+class _CurrencyConverterState extends State<CurrencyConverter> {
+  double _eurToUsd = 0.0;
   bool _isEurToUsd = true;
 
-  void _refreshExchangeRate() async {
-    double rate = await ExchangeService.fetchExchangeRate(_isEurToUsd);
+  void _fetchExchangeRate() async {
+    final rate = await widget.apiService.fetchExchangeRate();
     setState(() {
-      _exchangeRate = rate;
+      _eurToUsd = rate;
     });
   }
 
-  void _toggleExchangeDirection() {
+
+
+  void _toggleDirection() async {
     setState(() {
       _isEurToUsd = !_isEurToUsd;
     });
-    _refreshExchangeRate();
+
+
+    _fetchExchangeRate();
+  }
+
+
+  String _getConversionText() {
+    if (_isEurToUsd) {
+      if (_eurToUsd != 0) {
+        return '1 EUR = $_eurToUsd USD';
+      } else {
+        return 'Loading...';
+      }
+    } else {
+      if (_eurToUsd != 0) {
+        return '1 USD = ${(1 / _eurToUsd).toStringAsFixed(2)} EUR';
+      } else {
+        return 'Loading...';
+      }
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    _refreshExchangeRate();
+    _fetchExchangeRate();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Currency Exchange App'),
+        title: Text('Currency Converter'),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
-            onPressed: _refreshExchangeRate,
-          ),
-          IconButton(
-            icon: Icon(Icons.swap_horiz),
-            onPressed: _toggleExchangeDirection,
+            onPressed: _fetchExchangeRate,
           ),
         ],
       ),
       body: Center(
-        child: _exchangeRate == 0.0
-            ? CircularProgressIndicator() // Show loading indicator while fetching rate
-            : Text(
-          '1 ${_isEurToUsd ? 'EUR' : 'USD'} = ${_exchangeRate.toStringAsFixed(2)} ${_isEurToUsd ? 'USD' : 'EUR'}',
-          style: TextStyle(fontSize: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _getConversionText(),
+              style: TextStyle(fontSize: 20.0),
+            ),
+            SizedBox(height: 20.0),
+            ElevatedButton(
+              onPressed: _toggleDirection,
+              child: Text(_isEurToUsd ? 'Switch to USD to EUR' : 'Switch to EUR to USD'),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
+
+
 

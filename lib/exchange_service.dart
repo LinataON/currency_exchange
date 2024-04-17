@@ -1,22 +1,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class ExchangeService {
-  static const String _apiKey = 'fca_live_MobjuZgBTeC1cHjJVPPN6P8uUhxMteATlanHs2iQ';
-  static const String _baseUrl = 'https://api.freecurrencyapi.com/api/v1/latest';
 
-  static Future<double> fetchExchangeRate(bool isEurToUsd) async {
-    final fromCurrency = isEurToUsd ? 'EUR' : 'USD';
-    final toCurrency = isEurToUsd ? 'USD' : 'EUR';
+class ApiService {
+  final String apiKey;
+  ApiService(this.apiKey);
 
-    //final response = await http.get('$_baseUrl/converter?apikey=$_apiKey&q=$fromCurrency-$toCurrency');
-    final response = await http.get(Uri.parse('$_baseUrl/converter?apikey=$_apiKey&q=$fromCurrency-$toCurrency'));
+  Future<double> fetchExchangeRate() async {
+    final response = await http.get(Uri.parse('http://api.freecurrencyapi.com/v1/latest?base_currency=EUR&apikey=$apiKey'));
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data'][toCurrency];
+      final data = jsonDecode(response.body);
+      return data['data']['USD'];
     } else {
       throw Exception('Failed to load exchange rate');
     }
   }
 }
+
+
